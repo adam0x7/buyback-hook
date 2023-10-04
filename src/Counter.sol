@@ -11,28 +11,20 @@ import {BalanceDelta} from "@uniswap/v4-core/contracts/types/BalanceDelta.sol";
 
 contract Counter is BaseHook {
     using PoolIdLibrary for PoolKey;
+    address treasury;
 
-    // NOTE: ---------------------------------------------------------
-    // state variables should typically be unique to a pool
-    // a single hook contract should be able to service multiple pools
-    // ---------------------------------------------------------------
-
-    mapping(PoolId => uint256 count) public beforeSwapCount;
-    mapping(PoolId => uint256 count) public afterSwapCount;
-
-    mapping(PoolId => uint256 count) public beforeModifyPositionCount;
-    mapping(PoolId => uint256 count) public afterModifyPositionCount;
-
-    constructor(IPoolManager _poolManager) BaseHook(_poolManager) {}
+    constructor(IPoolManager _poolManager, address _treasury) BaseHook(_poolManager) {
+        treasury = _treasury;
+    }
 
     function getHooksCalls() public pure override returns (Hooks.Calls memory) {
         return Hooks.Calls({
             beforeInitialize: false,
             afterInitialize: false,
-            beforeModifyPosition: true,
-            afterModifyPosition: true,
-            beforeSwap: true,
-            afterSwap: true,
+            beforeModifyPosition: false,
+            afterModifyPosition: false,
+            beforeSwap: false,
+            afterSwap: false,
             beforeDonate: false,
             afterDonate: false
         });
@@ -47,8 +39,7 @@ contract Counter is BaseHook {
         override
         returns (bytes4)
     {
-        beforeSwapCount[key.toId()]++;
-        return BaseHook.beforeSwap.selector;
+
     }
 
     function afterSwap(address, PoolKey calldata key, IPoolManager.SwapParams calldata, BalanceDelta, bytes calldata)
@@ -56,8 +47,7 @@ contract Counter is BaseHook {
         override
         returns (bytes4)
     {
-        afterSwapCount[key.toId()]++;
-        return BaseHook.afterSwap.selector;
+
     }
 
     function beforeModifyPosition(
@@ -66,8 +56,7 @@ contract Counter is BaseHook {
         IPoolManager.ModifyPositionParams calldata,
         bytes calldata
     ) external override returns (bytes4) {
-        beforeModifyPositionCount[key.toId()]++;
-        return BaseHook.beforeModifyPosition.selector;
+
     }
 
     function afterModifyPosition(
@@ -77,7 +66,6 @@ contract Counter is BaseHook {
         BalanceDelta,
         bytes calldata
     ) external override returns (bytes4) {
-        afterModifyPositionCount[key.toId()]++;
-        return BaseHook.afterModifyPosition.selector;
+
     }
 }
