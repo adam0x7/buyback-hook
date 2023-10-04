@@ -8,13 +8,16 @@ import {IPoolManager} from "@uniswap/v4-core/contracts/interfaces/IPoolManager.s
 import {PoolKey} from "@uniswap/v4-core/contracts/types/PoolKey.sol";
 import {PoolId, PoolIdLibrary} from "@uniswap/v4-core/contracts/types/PoolId.sol";
 import {BalanceDelta} from "@uniswap/v4-core/contracts/types/BalanceDelta.sol";
+import {IUniswapV4Oracle} from "./interfaces/IUniswapV4Oracle.sol";
 
 contract Counter is BaseHook {
     using PoolIdLibrary for PoolKey;
     address treasury;
+    IUniswapV4Oracle oracle;
 
-    constructor(IPoolManager _poolManager, address _treasury) BaseHook(_poolManager) {
+    constructor(IPoolManager _poolManager, address _treasury, IUniswapV4Oracle _oracle) BaseHook(_poolManager) {
         treasury = _treasury;
+        oracle = _oracle;
     }
 
     function getHooksCalls() public pure override returns (Hooks.Calls memory) {
@@ -29,10 +32,6 @@ contract Counter is BaseHook {
             afterDonate: false
         });
     }
-
-    // -----------------------------------------------
-    // NOTE: see IHooks.sol for function documentation
-    // -----------------------------------------------
 
     function beforeSwap(address, PoolKey calldata key, IPoolManager.SwapParams calldata, bytes calldata)
         external

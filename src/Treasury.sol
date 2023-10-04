@@ -6,12 +6,20 @@ import "./Interfaces/IUniswapRouter.sol";
 import {IPoolManager} from "@uniswap/v4-core/contracts/interfaces/IPoolManager.sol";
 import {PoolKey} from "@uniswap/v4-core/contracts/types/PoolKey.sol";
 import {PoolId, PoolIdLibrary} from "@uniswap/v4-core/contracts/types/PoolId.sol";
+import {PoolModifyPositionTest} from "@uniswap/v4-core/contracts/test/PoolModifyPositionTest.sol";
+import {PoolSwapTest} from "@uniswap/v4-core/contracts/test/PoolSwapTest.sol";
 
 contract Treasury {
     address private owner;
     address public buybackHook;
     address private token0;
     address private token1;
+    PoolModifyPositionTest modifyPositionRouter;
+    PoolSwapTest swapRouter;
+    PoolKey poolKey;
+
+    uint160 public constant MIN_PRICE_LIMIT = TickMath.MIN_SQRT_RATIO + 1;
+    uint160 public constant MAX_PRICE_LIMIT = TickMath.MAX_SQRT_RATIO - 1;
 
     event Deposit(address indexed from, uint256 amount);
 
@@ -19,11 +27,13 @@ contract Treasury {
 
     constructor(
         address _usdcTokenAddress,
-        address _buybackHook
+        address _buybackHook,
+        PoolKey _poolKey
     ) {
         owner = msg.sender;
         token0 = _usdcTokenAddress;
         buybackHook = _buybackHook;
+        poolKey = _poolKey;
     }
 
     modifier onlyOwner() {
@@ -51,7 +61,6 @@ contract Treasury {
         IERC20(token).transferFrom(msg.sender, address(this), amount);
     }
 
-    // Deposit funds into the treasury contract
     function deposit(uint256 amount) external {
         IERC20 usdcToken = IERC20(token0);
 
@@ -62,7 +71,6 @@ contract Treasury {
         emit Deposit(msg.sender, amount);
     }
 
-    // Withdraw funds from the treasury contract
     function withdraw(uint256 amount) external onlyOwner {
         IERC20 usdcToken = IERC20(token0);
         require(
@@ -77,11 +85,17 @@ contract Treasury {
         emit Withdrawal(msg.sender, amount);
     }
 
-    function swapTokens() external onlyOwner {
-        IPoolManager.SwapParams swapParams = IPoolManager.SwapParams(false, 100, 0);
-        poolKey = PoolKey(Currency.wrap(address(token0)), Currency.wrap(address(token1)), 3000, 60, IHooks(counter));
-        bytes memory hookData = abi.encode(buybackHook);
-        buybackHook.poolManager.swap(poolKey, swapParams,hookData);
+    function swap(PoolKey memory key, int256 amountSpecified, bool zeroForOne, bytes memory hookData) internal {
+        IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
+            zeroForOne: zeroForOne,
+            amountSpecified: amountSpecified,
+            sqrtPriceLimitX96: zeroForOne ? MIN_PRICE_LIMIT : MAX_PRICE_LIMIT
+        });
+
+        PoolSwapTest.TestSettings memory settings =
+                            PoolSwapTest.TestSettings({withdrawTokens: true, settleUsingTransfer: true});
+
+        swapRouter.swap(key, params, settings, hookData);
     }
 
 }
