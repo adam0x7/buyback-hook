@@ -22,7 +22,7 @@ import {Currency, CurrencyLibrary} from "@uniswap/v4-core/contracts/types/Curren
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract TreasuryScript is Script, Deployers {
-    address constant CREATE2_DEPLOYER = address(0x13b0D85CcB8bf860b6b79AF3029fCA081AE9beF2); // Mumbai Deployer from -> https://github.com/pcaversaccio/create2deployer
+    address constant CREATE2_DEPLOYER = address(0x4e59b44847b379578588920cA78FbF26c0B4956C); // Mumbai Deployer from -> https://github.com/pcaversaccio/create2deployer
     IPoolManager manager = IPoolManager(0x5FF8780e4D20e75B8599A9C4528D8ac9682e5c89); //Pool Manager address on Mumbai 🦄
     using CurrencyLibrary for Currency;
 
@@ -49,7 +49,10 @@ contract TreasuryScript is Script, Deployers {
 
         // Mine a salt that will produce a hook address with the correct flags
         (address hookAddress, bytes32 salt) =
-                            HookMiner.find(CREATE2_DEPLOYER, flags, 3000, type(Counter).creationCode,
+                            HookMiner.find(CREATE2_DEPLOYER,
+                            flags,
+                            3000,
+                            type(Counter).creationCode,
                             abi.encode(address(manager)));
         Counter counter = new Counter{salt: salt}(manager); // creating our hook with CREATE2
         require(address(counter) == hookAddress, "CounterScript: hook address mismatch");
@@ -59,15 +62,15 @@ contract TreasuryScript is Script, Deployers {
                         PoolKey(Currency.wrap(address(token0)),
                         Currency.wrap(address(token1)),
                         3000, 60, IHooks(counter));
-
         manager.initialize(key, SQRT_RATIO_1_1, ZERO_BYTES);
 
         Treasury treasury = new Treasury(address(token0), address(token1), manager);
+        console2.log("Pt. 3");
         ICounter(counter).setTreasury(address(treasury));
 
 
         //Setting liquidity at the end here
-        router.modifyPosition(key, IPoolManager.ModifyPositionParams(-6000, 6000, 500 ether), abi.encode(msg.sender));
+        router.modifyPosition(key, IPoolManager.ModifyPositionParams(-6000, 6000, 500), abi.encode(msg.sender));
         vm.stopBroadcast();
     }
 
