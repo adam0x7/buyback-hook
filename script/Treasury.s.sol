@@ -17,10 +17,12 @@ import {PoolKey} from "@uniswap/v4-core/contracts/types/PoolKey.sol";
 import {Currency, CurrencyLibrary} from "@uniswap/v4-core/contracts/types/Currency.sol";
 import {ICounter} from "../src/ICounter.sol";
 import {IHooks} from "@uniswap/v4-core/contracts/interfaces/IHooks.sol";
+import {Currency, CurrencyLibrary} from "@uniswap/v4-core/contracts/types/Currency.sol";
 
 contract TreasuryScript is Script, Deployers {
-    address constant CREATE2_DEPLOYER = address(0x790DeEB2929201067a460974612c996D2A25183d);
+    address constant CREATE2_DEPLOYER = address(0x13b0D85CcB8bf860b6b79AF3029fCA081AE9beF2); // Mumbai Deployer from -> https://github.com/pcaversaccio/create2deployer
     IPoolManager manager = IPoolManager(0x5FF8780e4D20e75B8599A9C4528D8ac9682e5c89); //Pool Manager address on Mumbai 🦄
+    using CurrencyLibrary for Currency;
 
     function setUp() public {}
 
@@ -37,6 +39,7 @@ contract TreasuryScript is Script, Deployers {
         MockERC20 _tokenB = MockERC20(0x4f81Ff288518727Ae2583f67fEDb46533c9F1238);
         MockERC20 token0;
         MockERC20 token1;
+
 
         //token1 can't be longer than token0, we need to make sure that token0 is smaller
         if (address(_tokenA) < address(_tokenB)) {
@@ -79,8 +82,8 @@ contract TreasuryScript is Script, Deployers {
         manager.initialize(key, SQRT_RATIO_1_1, ZERO_BYTES);
 
         vm.broadcast();
-        Treasury treasury = new Treasury(token0, token1, manager);
-        ICounter(counter).setTreasury(treasury);
+        Treasury treasury = new Treasury(address(token0), address(token1), manager);
+        ICounter(counter).setTreasury(address(treasury));
 
 
         vm.broadcast();
