@@ -9,14 +9,18 @@ import {PoolKey} from "@uniswap/v4-core/contracts/types/PoolKey.sol";
 import {PoolId, PoolIdLibrary} from "@uniswap/v4-core/contracts/types/PoolId.sol";
 import {BalanceDelta} from "@uniswap/v4-core/contracts/types/BalanceDelta.sol";
 import {ITreasury} from "./ITreasury.sol";
+import {ICounter} from "./ICounter.sol";
 
-contract Counter is BaseHook {
+
+contract Counter is BaseHook, ICounter {
     using PoolIdLibrary for PoolKey;
-    ITreasury public treasury;
+    address treasury;
 
 
-    constructor(IPoolManager _poolManager, address _treasury) BaseHook(_poolManager) {
-        treasury = ITreasury(_treasury);
+    constructor(IPoolManager _poolManager) BaseHook(_poolManager) {}
+
+    function setTreasury(address _treasury) external {
+        treasury = _treasury;
     }
 
     function getHooksCalls() public pure override returns (Hooks.Calls memory) {
@@ -36,8 +40,8 @@ contract Counter is BaseHook {
         external
         override
         returns (bytes4) {
-        uint256 protocolReserves = poolManager.reservesOf(treasury.getProtocolToken());
-        uint256 usdcReserves = poolManager.reservesOf(treasury.getUsdcToken());
+        uint256 protocolReserves = poolManager.reservesOf(ITreasury(treasury).getProtocolToken());
+        uint256 usdcReserves = poolManager.reservesOf(ITreasury(treasury).getUsdcToken());
         uint256 price = protocolReserves / usdcReserves;
         uint256 amountToBuy = (usdcReserves - protocolReserves) > price ? price : (usdcReserves - protocolReserves);
         if (price < 1) {
@@ -46,7 +50,7 @@ contract Counter is BaseHook {
                 amountSpecified: int256(amountToBuy),
                 sqrtPriceLimitX96: uint160(0)
             });
-            treasury.swapTokens(params, block.timestamp + 30);
+            ITreasury(treasury).swapTokens(params, block.timestamp + 30);
         }
         return Counter.afterSwap.selector;
     }

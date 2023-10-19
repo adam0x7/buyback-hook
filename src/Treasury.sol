@@ -13,7 +13,6 @@ contract Treasury {
     using CurrencyLibrary for Currency;
 
     address private owner;
-    address   public buybackHook;
     Currency public usdcToken;
     Currency public protocolToken;
     IPoolManager public poolManager;
@@ -27,13 +26,11 @@ contract Treasury {
     constructor(
         address _protocolAddress,
         address _usdcTokenAddress,
-        address _buybackHook,
         IPoolManager _poolManager
     ) {
         owner = msg.sender;
         protocolToken = CurrencyLibrary.fromId(uint160(_protocolAddress));
         usdcToken = CurrencyLibrary.fromId(uint160(_usdcTokenAddress));
-        buybackHook = _buybackHook;
         poolManager = _poolManager;
     }
 
@@ -45,20 +42,11 @@ contract Treasury {
         _;
     }
 
-    modifier onlyHook() {
-        require(msg.sender == buybackHook, "Only buyback hook can access");
-        _;
-    }
 
 
     // Getter function for the owner state variable
     function getOwner() external view returns (address) {
         return owner;
-    }
-
-    // Getter function for the buybackHook state variable
-    function getBuybackHook() external view returns (address) {
-        return buybackHook;
     }
 
     // Getter function for the usdcToken state variable
@@ -87,7 +75,7 @@ contract Treasury {
         PoolKey calldata poolKey,
         IPoolManager.SwapParams calldata swapParams,
         uint256 deadline
-    ) public payable onlyHook {
+    ) public payable {
         poolManager.lock(abi.encode(poolKey, swapParams, deadline));
     }
 
