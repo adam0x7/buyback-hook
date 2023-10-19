@@ -20,7 +20,7 @@ import {IHooks} from "@uniswap/v4-core/contracts/interfaces/IHooks.sol";
 
 contract TreasuryScript is Script, Deployers {
     address constant CREATE2_DEPLOYER = address(0x790DeEB2929201067a460974612c996D2A25183d);
-    IPoolManager manager = IPoolManager(0x5FF8780e4D20e75B8599A9C4528D8ac9682e5c89);
+    IPoolManager manager = IPoolManager(0x5FF8780e4D20e75B8599A9C4528D8ac9682e5c89); //Pool Manager address on Mumbai 🦄
 
     function setUp() public {}
 
