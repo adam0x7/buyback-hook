@@ -5,4 +5,11 @@ libs = ["lib"]
 ffi = true
 fs_permissions = [{ access = "read-write", path = ".forge-snapshots/"}]
 
+[rpc_endpoints]
+mumbai = "${MUMBAI_RPC_URL}"
+
+[etherscan]
+mumbai = { key = "${POLYSCAN_API_KEY}" }
+
+
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
