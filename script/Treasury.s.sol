@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 //Forked some of the logic from https://github.com/saucepoint/v4-axiom-rebalancing/blob/main/script/2_PoolInit.s.sol
+// Follow @saucepoint on Github for great Uniswap hooks code examples
 pragma solidity ^0.8.19;
 
 import {Script, console2} from "forge-std/Script.sol";
@@ -27,16 +28,17 @@ contract TreasuryScript is Script, Deployers {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        // deploy router
+        // deploying our router
         PoolModifyPositionTest router =
         new PoolModifyPositionTest(IPoolManager(address(0x5FF8780e4D20e75B8599A9C4528D8ac9682e5c89)));
 
-        // deploy tokens
+        // deploying some mock tokens
         MockERC20 _tokenA = MockERC20(0x9999f7Fea5938fD3b1E26A12c3f2fb024e194f97);
         MockERC20 _tokenB = MockERC20(0x4f81Ff288518727Ae2583f67fEDb46533c9F1238);
         MockERC20 token0;
         MockERC20 token1;
 
+        //token1 can't be longer than token0, we need to make sure that token0 is smaller
         if (address(_tokenA) < address(_tokenB)) {
             token0 = _tokenA;
             token1 = _tokenB;
@@ -52,6 +54,8 @@ contract TreasuryScript is Script, Deployers {
         token0.approve(address(router), 1000e18);
         token1.approve(address(router), 1000e18);
 
+
+        //setting the flag for the hook that we will be using
         uint160 flags = uint160(Hooks.AFTER_SWAP_FLAG);
 
         // Mine a salt that will produce a hook address with the correct flags
@@ -60,16 +64,17 @@ contract TreasuryScript is Script, Deployers {
                             abi.encode(address(manager)));
 
 
-        // Deploy the hook using CREATE2
+        // Deploying the hook using a CREATE2 address that I found on Mumbai, probably will deploy another soon
         vm.broadcast();
         Counter counter = new Counter{salt: salt}(manager);
         require(address(counter) == hookAddress, "CounterScript: hook address mismatch");
 
-        // init pool
+        // init your pool
         PoolKey memory key =
                         PoolKey(Currency.wrap(address(token0)),
                         Currency.wrap(address(token1)),
                         3000, 60, IHooks(counter));
+
         vm.broadcast();
         manager.initialize(key, SQRT_RATIO_1_1, ZERO_BYTES);
 
@@ -79,6 +84,7 @@ contract TreasuryScript is Script, Deployers {
 
 
         vm.broadcast();
+        //Setting liquidity at the end here
         router.modifyPosition(key, IPoolManager.ModifyPositionParams(-6000, 6000, 500 ether), abi.encode(msg.sender));
     }
 
