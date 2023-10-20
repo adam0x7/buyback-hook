@@ -1,5 +1,7 @@
 # Automated Buyback Hook
-This Uniswap V4 hook enables protocols to implement automated token buybacks from their treasury when price drops below a target threshold in a Uniswap Pool.
+This Uniswap V4 hook enables protocols to implement automated token buybacks from their treasury when price drops below a target threshold in a Uniswap Pool. This has been shipped onto the Mumbai Testnet if you want to test this out. Foundry Tests are in progress
+[Treasury Contract](https://mumbai.polygonscan.com/address/0xa9eeb49634836043557d12436745f13d2aa71a2f) | [BuyBackHook](https://mumbai.polygonscan.com/address/0x0422a3aeba3f00e1034f3e113e93781620f778db)
+
 
 ## Overview
 The buyback hook uses Axiom to access historical price data for the protocol's token. It sets a target price threshold and monitors the current price. When the price crosses below the threshold, the hook automatically executes a buyback:
