@@ -50,7 +50,10 @@ contract Counter is BaseHook, ICounter {
         uint targetSqrtPrice = calculateSqrtPriceX96(1);
 
         if (price < 1) {
+            //how to figure our amountRemaining in pool?
+            //unfinished, code doesnt not run and isnt full implmentation
             SwapMath.computeSwapStep(price, targetSqrtPrice, poolManager.getLiquidity(poolId));
+            //if result of above function pushes our price above 1 then we make the swap in from the treasury contract
         }
 
         return Counter.afterSwap.selector;
