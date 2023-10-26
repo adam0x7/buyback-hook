@@ -43,16 +43,16 @@ contract Counter is BaseHook, ICounter {
         returns (bytes4) {
 
         bytes32 poolId = PoolIdLibrary.toId(key);
+        //refactor this. you're assigning a tuple to uint160, very wrong
         uint160 slot0 = poolManager.getSlot0(id);
 
         uint price = calculateSpotPrice(slot0.sqrtPriceX96);
-
         uint targetSqrtPrice = calculateSqrtPriceX96(1);
 
         if (price < 1) {
             //how to figure our amountRemaining in pool?
             //unfinished, code doesnt not run and isnt full implmentation
-            SwapMath.computeSwapStep(price, targetSqrtPrice, poolManager.getLiquidity(poolId));
+//            SwapMath.computeSwapStep(price, targetSqrtPrice, poolManager.getLiquidity(poolId), );
             //if result of above function pushes our price above 1 then we make the swap in from the treasury contract
         }
 
