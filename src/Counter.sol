@@ -10,6 +10,7 @@ import {PoolId, PoolIdLibrary} from "@uniswap/v4-core/contracts/types/PoolId.sol
 import {BalanceDelta} from "@uniswap/v4-core/contracts/types/BalanceDelta.sol";
 import {ITreasury} from "./ITreasury.sol";
 import {ICounter} from "./ICounter.sol";
+import {SwapMath} from "lib/v4-periphery/lib/v4-core/contracts/libraries/SwapMath.sol";
 
 
 contract Counter is BaseHook, ICounter {
@@ -40,19 +41,45 @@ contract Counter is BaseHook, ICounter {
         external
         override
         returns (bytes4) {
-        uint256 protocolReserves = poolManager.reservesOf(ITreasury(treasury).getProtocolToken());
-        uint256 usdcReserves = poolManager.reservesOf(ITreasury(treasury).getUsdcToken());
-        uint256 price = protocolReserves / usdcReserves;
-        uint256 amountToBuy = (usdcReserves - protocolReserves) > price ? price : (usdcReserves - protocolReserves);
+
+        bytes32 poolId = PoolIdLibrary.toId(key);
+        uint160 slot0 = poolManager.getSlot0(id);
+
+        uint price = calculateSpotPrice(slot0.sqrtPriceX96);
+
+        uint targetSqrtPrice = calculateSqrtPriceX96(1);
+
         if (price < 1) {
-            IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
-                zeroForOne: false,
-                amountSpecified: int256(amountToBuy),
-                sqrtPriceLimitX96: uint160(0)
-            });
-            ITreasury(treasury).swapTokens(params, block.timestamp + 30);
+            SwapMath.computeSwapStep(price, targetSqrtPrice, poolManager.getLiquidity(poolId));
         }
+
         return Counter.afterSwap.selector;
+    }
+
+    function calculateSpotPrice(uint priceX96) internal pure returns (uint usdcPrice) {
+            uint q = 2 ** 96;
+            uint p = (priceX96 / q) ** 2;
+            //protocol token
+            uint decimal0 = 1e18;
+            //usdc token
+            uint decimal1 = 1e6;
+
+            usdcPrice = p * decimal0 / decimal1;
+    }
+
+    function calculateSqrtPriceX96(uint256 price) internal pure returns (uint160) {
+        return uint160(sqrt(price) * (1 << 96));
+    }
+
+    function sqrt(uint256 x) internal pure returns (uint256) {
+        if (x == 0) return 0;
+        uint256 z = x;
+        uint256 y = (z + 1) / 2;
+        while (y < z) {
+            z = y;
+            y = (z + x / z) / 2;
+        }
+        return z;
     }
 
 }
