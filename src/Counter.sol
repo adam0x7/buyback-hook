@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {BaseHook} from "v4-periphery/BaseHook.sol";
-
+import {BaseHook} from "lib/v4-periphery/contracts/BaseHook.sol";
 import {Hooks} from "@uniswap/v4-core/contracts/libraries/Hooks.sol";
 import {IPoolManager} from "@uniswap/v4-core/contracts/interfaces/IPoolManager.sol";
 import {PoolKey} from "@uniswap/v4-core/contracts/types/PoolKey.sol";
@@ -15,7 +14,7 @@ import {SwapMath} from "lib/v4-periphery/lib/v4-core/contracts/libraries/SwapMat
 
 contract Counter is BaseHook, ICounter {
     using PoolIdLibrary for PoolKey;
-    address treasury;
+    address public treasury;
 
 
     constructor(IPoolManager _poolManager) BaseHook(_poolManager) {}
@@ -43,17 +42,17 @@ contract Counter is BaseHook, ICounter {
         returns (bytes4) {
 
         bytes32 poolId = PoolIdLibrary.toId(key);
-        uint160 slot0 = poolManager.getSlot0(id);
 
-        uint price = calculateSpotPrice(slot0.sqrtPriceX96);
+        (sqrtPriceX96,tick,protocolFees, hookFees) = poolManager.getSlot0(id);
 
+        uint price = calculateSpotPrice(sqrtPriceX96);
         uint targetSqrtPrice = calculateSqrtPriceX96(1);
 
         if (price < 1) {
-            //how to figure our amountRemaining in pool?
-            //unfinished, code doesnt not run and isnt full implmentation
-            SwapMath.computeSwapStep(price, targetSqrtPrice, poolManager.getLiquidity(poolId));
-            //if result of above function pushes our price above 1 then we make the swap in from the treasury contract
+            //Ideally, here we would call a quote to attempt to find our target amount that we need to swap
+            //As of the time of this hook writing there is no V4 quoter, so we're going to just swap a hardcoded amount
+            IPoolManager.SwapParams swapParams = (true, 1000, targetSqrtPrice);
+            treasury.swapTokens(key, swapParams , 50);
         }
 
         return Counter.afterSwap.selector;
@@ -66,7 +65,6 @@ contract Counter is BaseHook, ICounter {
             uint decimal0 = 1e18;
             //usdc token
             uint decimal1 = 1e6;
-
             usdcPrice = p * decimal0 / decimal1;
     }
 
