@@ -1,34 +1,65 @@
-# Automated Buyback Hook
-This Uniswap V4 hook enables protocols to implement automated token buybacks from their treasury when price drops below a target threshold in a Uniswap Pool. This has been shipped onto the Mumbai Testnet if you want to test this out. Foundry Tests are in progress
-[Treasury Contract](https://mumbai.polygonscan.com/address/0xa9eeb49634836043557d12436745f13d2aa71a2f) | [BuyBackHook](https://mumbai.polygonscan.com/address/0x0422a3aeba3f00e1034f3e113e93781620f778db)
+# Uniswap v4 Token Buyback Hook
 
+## Description
 
-## Overview
-The buyback hook sets a target price threshold and monitors the current price after every swap. When the price crosses below the threshold, the hook automatically executes a buyback:
+This project introduces a token buyback mechanism for Uniswap v4 using a specialized hook. The hook is designed to allocate a portion of the fees collected from token swaps and liquidity withdrawals for the purpose of automatically buying back a specific token. This innovative approach aims to enhance liquidity and contribute to the stabilization of the token's value.
 
-Transfers ETH from treasury to provide liquidity
-Swaps ETH for tokens via the protocol's Uniswap pool
-Sends purchased tokens back to the treasury
-This provides decentralized on-chain price support using treasury funds.
+## How It Works
+
+### Hook Functionality
+
+- **Fee Allocation**: A predefined percentage of the fees from swaps and withdrawals is earmarked for the buyback.
+- **Automated Buyback Process**: The accumulated fees are used to automatically purchase the specified token at regular intervals or under certain market conditions.
+- **Market Sensitivity**: The mechanism is designed to respond dynamically to market fluctuations, optimizing buyback timing and volumes.
+
+### Integration with Uniswap v4
+
+- The hook integrates seamlessly with the existing Uniswap v4 framework, complying with its operational and security standards.
+- It enhances the Uniswap v4 ecosystem by adding a new layer of functionality beneficial to token stability.
+
+## Economics
+
+- **Liquidity Enhancement**: By reinjecting capital into the token market, the mechanism bolsters liquidity.
+- **Price Stabilization**: Regular buybacks can mitigate volatility, contributing to a more stable token valuation.
 
 ## Benefits
-- Automated price support during declines and volatility
-- Flexible liquidity provision from treasury funds
-- Maintains healthy token valuation and demand
-- Reduces need for manual buyback execution
 
+- **Token Value Support**: Supports the market value of the token by reducing supply and potentially increasing demand.
+- **Confidence in Liquidity**: Increases confidence among liquidity providers and traders in the token's market.
+- **Enhanced LP Rewards**: Potentially increases the value of liquidity provider rewards.
 
-# Architecture Breakdown:
-### Treasury Contract:
+## Deployment Scripts
 
-- **Primary Functions:** Execute swaps on Uniswap, hold protocol funds, and potentially burn bought-back tokens.
-- **Interactions:** Communicates with the Uniswap Hook to receive the buyback trigger and interacts with Uniswap to execute the buyback.
+Scripts for deploying the token buyback hook on the following testnets will be provided:
+- Polygon zkEVM
+- Optimism Testnet
+- Arbitrum Testnet
 
-### Uniswap Hook:
+---
 
-- **Primary Functions:** Monitors the current price of the token within the current block and triggers the Treasury Contract for buyback when the price falls below the threshold.
-- **Interactions:** Communicates with the Axiom Oracle for price verification and the Treasury Contract for triggering buybacks.
-
-This architecture and the order of operations aim to create a decentralized, on-chain mechanism for automated price support, reducing manual intervention and providing a systematic approach to maintaining a healthy token valuation.
++-----------------+     +------------------+     +-------------------+
+|                 |     |                  |     |                   |
+|  Token Swaps    +----->  Fee Collection  +----->  Hook Allocation  |
+|  & Withdrawals  |     |  (Swap/Withdraw) |     |  (Set % for Buy)  |
+|                 |     |                  |     |                   |
++-----------------+     +------------------+     +-------------------+
+                                                           |
+                                                           |
+                                                           v
+                                               +----------------------+
+                                               |                      |
+                                               |  Automated Buyback   |
+                                               |  (Purchase Tokens)   |
+                                               |                      |
+                                               +----------------------+
+                                                           |
+                                                           |
+                                                           v
+                                               +----------------------+
+                                               |                      |
+                                               |  Token Market Impact |
+                                               |  (Liquidity & Value) |
+                                               |                      |
+                                               +----------------------+
 
 
