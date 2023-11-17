@@ -1,5 +1,5 @@
 # Uniswap v4 Token Buyback Hook
-
+(Notes from Tyllen, swap assets across different L2s/chains)
 ## Description
 
 This project introduces a token buyback mechanism for Uniswap v4 using a specialized hook. The hook is designed to allocate a portion of the fees collected from token swaps and liquidity withdrawals for the purpose of automatically buying back a specific token. This innovative approach aims to enhance liquidity and contribute to the stabilization of the token's value.
